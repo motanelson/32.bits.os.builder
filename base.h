@@ -712,10 +712,10 @@ void box(int x,int y,int x1,int y1,char b)
 			}
 }
 
- void cls()
+ void cls(int ii)
  {
  			   int i=0xa0000;
-			   char b=1;
+			   char b=(char)ii;
 			   int c=0;
 			   for(c=0;c<65000;c=c+1)
 			   	pixels(b,i+c);

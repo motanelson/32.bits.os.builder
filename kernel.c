@@ -9,6 +9,7 @@ void kernel_main()
         
         for(n=0;n<320;n=n+20)vline(n,0,199,Black);
         for(n=0;n<200;n=n+20)hline(0,n,319,Black);
+        gputs(10,10,"hello world...",Black);
         while(1){}
 	
 	

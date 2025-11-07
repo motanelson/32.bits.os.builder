@@ -1,3 +1,7 @@
+#include <stddef.h>
+#include <stdint.h>
+#define FONTDATAMAX 2048
+
 int xxx=0;
 int yyy=0;
 int zzz=0;
@@ -6,65 +10,15 @@ int video;
  volatile unsigned int *timerss;
 static double PI = 3.141592653589793;
 static unsigned char *memoryStart;
-typedef int size_t;
-int NULL;
+
+
 // Estrutura para representar um bitmap com cabeçalho
 typedef struct Bitmap {
     int x;          // Comprimento em X
     int y;          // Comprimento em Y
     unsigned char* data; // Ponteiro para os dados do bitmap
 } Bitmap;
-char *scr2=(char *)0x000b8000L;//[80*26*2];
-
-void clear(){
-	int n=0;
-	char *src = scr2;//(char *)0x000b8000L;
-	for(n=0;n<80*24*2;n=n+2){
-		src[n]=32;
-		src[n+1]=0x67;
-	}
-}
-void scrollb8000()
-{
-	int n=0;
-	int nn=0;
-	
-	char *src = scr2;//(char *)0x000b8000L;
-	 
-	for(n=0;n<80*24*2;n++)src[n]=src[n+160];
-}
-void copyb8000(int address,char *s)
-{
-	int n=0;
-	int nn=0;
-	
-	char *src = scr2;//(char *)0x000b8000L;
-	 
-	while(s[n]!=0){
-		src[address+nn]=s[n];
-		nn++;
-		nn++;
-		n++;
-	}
-}
-void locate(int x,int y){
-
-	xxx=x;
-	yyy=y;
-	if(x>79)x=79;
-	if(y>24)y=24;
-	zzz=y*80*2+x*2;
-}
-void print(char* s){
-	copyb8000(zzz,s);
-	xxx=0;
-	yyy++;
-	if (yyy>24){
-		yyy=24;
-		scrollb8000();
-	}
-	locate(xxx,yyy);
-}
+char *fbp=(char *)0x000a0000L;//[80*26*2];
 
 
   static int abs(int i)
@@ -663,65 +617,6 @@ void invertScreenRightToLeft() {
         }
     }
 }
-void pixels(char b,int loc)
-        {
-        		   int i=loc;
-			   char *fbp=(char* )i;
-			   	*((char *)(fbp)) =(char)b;
-			   		  
-        }
-void vline(int x,int y,int y1,char b)
-{
-	int i=0xa0000;
-	int xx=y*320+x;
-	int yyy=y1-y;
-	int xxxx=0;
-	int c=0;
-	if (y1>=y && x<320 && x>-1 && y>-1 && y<200  && y1>-1 && y1<200)
-	{
-		
-			   
-			   for(c=0;c<(yyy*320);c=c+320)
-			   	pixels(b,i+c+xx);
-	}
-	
-}
-void hline(int x,int y,int x1,char b)
-{
-	int i=0xa0000;
-	int xx=y*320+x;
-	int xxx=x1-x;
-	int xxxx=0;
-	int c=0;
-	if (x1>=x && x<320 && x>-1 && y>-1 && y<200 && x1<320 && x1>-1)
-	{
-		
-			   
-			   for(c=0;c<xxx;c=c+1)
-			   	pixels(b,i+c+xx);
-	}
-	
-}
-void box(int x,int y,int x1,int y1,char b)
-{
-	int n=0;
-	int nn=y1-y;
-	if (y1>=y && x1>=x && x<320 && x>-1 && y>-1 && y<200 && x1<320 && x1>-1 && y1>-1 && y1<200){
-	for (n=0;n<nn;n=n+1)   
-			hline(x,n+y,x1,0);
-			}
-}
-
- void cls(int ii)
- {
- 			   int i=0xa0000;
-			   char b=(char)ii;
-			   int c=0;
-			   for(c=0;c<65000;c=c+1)
-			   	pixels(b,i+c);
- } 
- 
- 
  // Função para criar um bitmap
 Bitmap* createBitmap(int x, int y) {
     // Aloca memória para a estrutura Bitmap + dados do bitmap
@@ -866,23 +761,116 @@ char digitToChar(int digit) {
     // Retorna o caractere correspondente
     return asciiChars[digit];
 }
+void hline(int x, int y,int x2,char colors){
+    int f;
+    int xx1=x;
+    int xx2=x2;
+    int xx3=x;
+    int yy=y;
+    int steeps;
+    int location;
+    int addss;
+    if(xx2<xx1){
+        xx1=xx2;
+        xx2=xx3;
+    }
+    if(yy<0)yy=0;
+    if(yy>199)yy=199;
+    if(xx1<0)xx1=0;
+    if(xx2<0)xx2=0;
+    if(xx1>319)xx1=319;
+    if(xx2>319)xx2=319;
+                       
+    location =  320 * y + x;
+    steeps=xx2-xx1;
+    addss=1;
+    for(f=0;f<steeps;f++){
+        *((char*)(fbp + location)) = colors;
+        location=location+addss;
+    }
+}
 
-void start_dll(){
-		unsigned int memo=0x301000;
-		unsigned int memos=0x301000;
-		unsigned char* memoryStart = (unsigned char*)0x301000;
-		unsigned char* datas=(unsigned char*)0x60000;
-		unsigned int* datass=(unsigned int*)0x60000;
-		memcopy(memoryStart,datas,65032);
-		datass[0]=0;
-		__asm__ __volatile__("call *%0\n\t"
-		: 
-		: "r" (memo));
-		
-		
-} 
+void boxs(int x,int y,int x2,int y2,char colors){
+    int f;
+    int ff;
+    int xx1=x;
+    int xx2=x2;
+    int xx3=x;
+    int yy=y;
+    int yy1=y;
+    int yy2=y2;
+    int yy3=y;
+    int steeps;
+    int steeps2;
+    int location;
+    int addss;
+    int addss2;
+    if(xx2<xx1){
+        xx1=xx2;
+        xx2=xx3;
+    }
+    if(yy2<yy1){
+        yy1=yy2;
+        yy2=yy3;
+    }
+    if(yy1<0)yy1=0;
+    if(yy2<0)yy2=0;
+    if(yy1>199)yy1=199;
+    if(yy2>199)yy2=199;
+    if(xx1<0)xx1=0;
+    if(xx2<0)xx2=0;
+    if(xx1>319)xx1=319;
+    if(xx2>319)xx2=319;
+                       
+    location =  320 * y + x;
+    steeps2=xx2-xx1;
+    steeps=yy2-yy1;
+    addss=1;
+    addss2=((320-(xx2-xx1)));
+    if(addss2<addss)addss2=0;
+    for(f=0;f<steeps;f++){
+	for(ff=0;ff<steeps2;ff++){
+                
+                *((char*)(fbp + location)) = colors;
+                location=location+addss;
+        }
+        location=location+addss2;
+   }
+}
+void vline(int x,int y,int y2,char colors){
+    int f;
+    int yy1=y;
+    int yy2=y2;
+    int yy3=y;
+    int xx=x;
+    int steeps;
+    int location;
+    int addss;
+    if(yy2<yy1){
+        yy1=yy2;
+        yy2=yy3;
+    }
+    if(xx<0)xx=0;
+    if(xx>319)xx=319;
+    if(yy1<0)yy1=0;
+    if(yy2<0)yy2=0;
+    if(yy1>199)yy1=199;
+    if(yy2>199-1)yy2=199;
+                       
+    location =  320 * y + x;
+    steeps=yy2-yy1;
+    addss=320;
+    for(f=0;f<steeps;f++){
+            *((char*)(fbp + location)) =colors;
 
+            location=location+addss;
+    }
+}
 
+void cls(char colors){
+    boxs(0,0,319,199,colors);
+
+}
 
 
 
